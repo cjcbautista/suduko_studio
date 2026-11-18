@@ -1,0 +1,8 @@
+{
+  "testing_framework": "Set up pytest for this Flask Sudoku project. Add unit tests for solving, uniqueness counting, difficulty clue bands, and request-validation tests for every API route. Do not weaken production logic to make tests pass.",
+  "unique_solution": "Review sudoku_logic.py and verify that every generated puzzle has exactly one solution. Use an efficient count_solutions function that stops at two, explain the algorithm, and add a parameterized test for Easy, Medium, and Hard.",
+  "local_top_10": "Review the browser leaderboard. It must store only the ten fastest completed games in localStorage and display player name, formatted time, difficulty, and hints. Use textContent for user names and add graceful handling for corrupt storage data.",
+  "grid_styling": "Style the 9x9 board so adjacent 3x3 regions have visibly different but accessible colors in both light and dark mode. Keep strong 3x3 boundaries, visible keyboard focus, and a responsive square board at 320px viewport width.",
+  "accessibility_review": "Audit templates/index.html, styles.css, and app.js for keyboard use, labels, focus, live feedback, contrast, reduced motion, dialog focus, and errors that are not communicated by color alone. Suggest only changes compatible with plain HTML, CSS, and JavaScript.",
+  "suggestion_to_evaluate": "Should this application send the full Sudoku solution to the browser when a game starts? Evaluate the security and integrity tradeoffs. Prefer a server-side game ID with Hint and Check endpoints if exposing the solution makes cheating or accidental leakage easier."
+}

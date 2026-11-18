@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An accessible Sudoku game with unique puzzles, hints, a timer, and a local leaderboard.">
+  <title>Sudoku Studio</title>
+  <script>
+    // Apply the saved theme before first paint to prevent a light-mode flash.
+    if (localStorage.getItem('sudoku-theme') === 'dark' ||
+        (!localStorage.getItem('sudoku-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.dataset.theme = 'dark';
+    }
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#game-board">Skip to puzzle</a>
+  <header class="site-header">
+    <div class="brand" aria-label="Sudoku Studio home">
+      <span class="brand-mark" aria-hidden="true">9</span>
+      <span><strong>Sudoku</strong> Studio</span>
+    </div>
+    <button id="theme-toggle" class="icon-button" type="button" aria-pressed="false" aria-label="Switch to dark mode">
+      <span class="theme-icon" aria-hidden="true">☾</span>
+      <span class="theme-label">Dark</span>
+    </button>
+  </header>
+
+  <main class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">Think clearly. Play calmly.</p>
+      <h1 id="page-title">Your daily logic reset.</h1>
+      <p>Every puzzle has exactly one solution. Choose a level, take your time, and enjoy the solve.</p>
+    </section>
+
+    <div class="app-layout">
+      <section class="game-card" aria-labelledby="puzzle-heading">
+        <div class="game-toolbar">
+          <div>
+            <p class="section-label">Current puzzle</p>
+            <h2 id="puzzle-heading">Sudoku board</h2>
+          </div>
+          <div class="difficulty-control">
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty" name="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+            <button id="new-game" class="button button-primary" type="button">New game</button>
+          </div>
+        </div>
+
+        <div class="stats" aria-label="Game statistics">
+          <div class="stat"><span>Time</span><strong id="timer">00:00</strong></div>
+          <div class="stat"><span>Hints</span><strong id="hint-count">0 / 5</strong></div>
+          <div class="stat"><span>Level</span><strong id="level-label">Medium</strong></div>
+        </div>
+
+        <div id="status" class="status" role="status" aria-live="polite">Loading a fresh puzzle…</div>
+        <div id="game-board" class="sudoku-board" role="grid" aria-label="Sudoku puzzle" aria-busy="true"></div>
+
+        <div class="number-pad" aria-label="Number pad">
+          <button type="button" data-number="1">1</button><button type="button" data-number="2">2</button>
+          <button type="button" data-number="3">3</button><button type="button" data-number="4">4</button>
+          <button type="button" data-number="5">5</button><button type="button" data-number="6">6</button>
+          <button type="button" data-number="7">7</button><button type="button" data-number="8">8</button>
+          <button type="button" data-number="9">9</button><button type="button" data-number="0" aria-label="Erase selected cell">⌫</button>
+        </div>
+
+        <div class="game-actions">
+          <button id="hint" class="button button-secondary" type="button"><span aria-hidden="true">✦</span> Hint</button>
+          <button id="check" class="button button-secondary" type="button"><span aria-hidden="true">✓</span> Check</button>
+        </div>
+        <p class="keyboard-help">Keyboard: 1–9 to enter, Delete to erase, and arrow keys to move.</p>
+      </section>
+
+      <aside class="sidebar" aria-label="Game information">
+        <section class="panel guide-panel" aria-labelledby="guide-heading">
+          <p class="section-label">Quick guide</p>
+          <h2 id="guide-heading">How to play</h2>
+          <ol>
+            <li><span>1</span><p>Fill each row with the numbers 1–9.</p></li>
+            <li><span>2</span><p>Use each number once per column.</p></li>
+            <li><span>3</span><p>Complete every outlined 3×3 region.</p></li>
+          </ol>
+          <div class="legend" aria-label="Cell color legend">
+            <span><i class="legend-fixed"></i>Given</span>
+            <span><i class="legend-hint"></i>Hint</span>
+            <span><i class="legend-error"></i>Needs attention</span>
+          </div>
+        </section>
+
+        <section class="panel leaderboard-panel" aria-labelledby="leaderboard-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">This browser</p>
+              <h2 id="leaderboard-heading">Top 10</h2>
+            </div>
+            <button id="clear-scores" class="text-button" type="button">Clear</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">Local top ten Sudoku times</caption>
+              <thead><tr><th>#</th><th>Player</th><th>Time</th><th>Level</th><th>Hints</th></tr></thead>
+              <tbody id="leaderboard-body"></tbody>
+            </table>
+          </div>
+          <p id="empty-scores" class="empty-state">Complete a puzzle to claim the first spot.</p>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <dialog id="complete-dialog" class="complete-dialog" aria-labelledby="complete-title">
+    <form id="score-form" method="dialog">
+      <button id="close-dialog" class="dialog-close" type="button" aria-label="Close completion dialog">×</button>
+      <div class="celebration" aria-hidden="true">✓</div>
+      <p class="section-label">Puzzle complete</p>
+      <h2 id="complete-title">Beautifully solved!</h2>
+      <p id="completion-summary"></p>
+      <label for="player-name">Name for the local leaderboard</label>
+      <input id="player-name" name="player-name" type="text" maxlength="24" autocomplete="nickname" placeholder="Your name" required>
+      <button class="button button-primary button-full" value="default" type="submit">Save score</button>
+      <p class="privacy-note">Saved only in this browser.</p>
+    </form>
+  </dialog>
+
+  <noscript><p class="noscript">Sudoku Studio requires JavaScript to run.</p></noscript>
+</body>
+</html>
