@@ -51,19 +51,15 @@ def test_check_and_hint_work_for_active_game(client):
     assert 1 <= hint_data["value"] <= 9
 
 
-def test_hint_limit_is_five(client):
+def test_hints_remain_available_after_five(client):
     game = create_game(client)
     board = [row[:] for row in game["puzzle"]]
 
-    for _ in range(5):
+    for _ in range(6):
         hint = client.post("/api/hint", json={"game_id": game["game_id"], "board": board})
         assert hint.status_code == 200
         hint_data = hint.get_json()
         board[hint_data["row"]][hint_data["col"]] = hint_data["value"]
-
-    sixth_hint = client.post("/api/hint", json={"game_id": game["game_id"], "board": board})
-    assert sixth_hint.status_code == 409
-    assert "No hints remaining" in sixth_hint.get_json()["error"]
 
 
 def test_check_rejects_bad_board_and_unknown_game(client):

@@ -1,7 +1,6 @@
 "use strict";
 
 const STORAGE_KEYS = { scores: "sudoku-top10-v1", theme: "sudoku-theme" };
-const MAX_HINTS = 5;
 const state = {
   gameId: null,
   puzzle: [],
@@ -280,10 +279,6 @@ async function checkBoard({ announce }) {
 
 async function requestHint() {
   if (!state.gameId || state.completed) return;
-  if (state.hints >= MAX_HINTS) {
-    setStatus("Hint limit reached. No hints remaining.", "error");
-    return;
-  }
   setControlsBusy(true);
   try {
     const response = await fetch("/api/hint", {
@@ -305,12 +300,7 @@ async function requestHint() {
     validateVisibleBoard();
     selectCell(data.row, data.col);
     updateNumberTracking();
-    setStatus(
-      state.hints >= MAX_HINTS
-        ? `Hint placed in row ${data.row + 1}, column ${data.col + 1}. Hint limit reached. No hints remaining.`
-        : `Hint placed in row ${data.row + 1}, column ${data.col + 1}.`,
-      state.hints >= MAX_HINTS ? "error" : "success",
-    );
+    setStatus(`Hint placed in row ${data.row + 1}, column ${data.col + 1}.`, "success");
     if (isBoardFilled()) checkBoard({ announce: false });
   } catch (error) {
     setStatus(error.message, "error");
@@ -410,9 +400,9 @@ function stopTimer() {
 
 function updateStats() {
   elements.timer.textContent = formatTime(state.seconds);
-  elements.hintCount.textContent = `${state.hints} / ${MAX_HINTS}`;
+  elements.hintCount.textContent = String(state.hints);
   elements.levelLabel.textContent = capitalize(state.difficulty);
-  elements.hint.disabled = state.hints >= MAX_HINTS || state.completed;
+  elements.hint.disabled = state.completed;
 }
 
 function updateNumberTracking() {
@@ -433,7 +423,7 @@ function isBoardFilled() {
 function setControlsBusy(isBusy) {
   elements.newGame.disabled = isBusy;
   elements.check.disabled = isBusy;
-  elements.hint.disabled = isBusy || state.hints >= MAX_HINTS || state.completed;
+  elements.hint.disabled = isBusy || state.completed;
 }
 
 function setStatus(message, kind = "") {

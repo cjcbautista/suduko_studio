@@ -16,7 +16,6 @@ from sudoku_logic import generate_puzzle, incorrect_cells, normalize_board
 
 GAME_TTL_SECONDS = 4 * 60 * 60
 MAX_GAMES = 200
-MAX_HINTS = 5
 
 
 @dataclass
@@ -25,7 +24,6 @@ class Game:
     solution: list[list[int]]
     difficulty: str
     created_at: float
-    hints_used: int = 0
 
 
 class GameStore:
@@ -56,15 +54,6 @@ class GameStore:
         with self._lock:
             self._discard_expired()
             return self._games.get(game_id)
-
-    def consume_hint(self, game: Game) -> bool:
-        with self._lock:
-            self._discard_expired()
-            if game.hints_used >= MAX_HINTS:
-                return False
-            game.hints_used += 1
-            return True
-
 
 def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     app = Flask(__name__)
@@ -138,8 +127,6 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         ]
         if not available:
             return jsonify(error="No empty cells are available for a hint."), 409
-        if not game_store.consume_hint(game):
-            return jsonify(error="Hint limit reached. No hints remaining."), 409
         row, col = random.choice(available)
         return jsonify(row=row, col=col, value=game.solution[row][col])
 
